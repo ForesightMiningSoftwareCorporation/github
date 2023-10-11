@@ -369,7 +369,8 @@ jobs:
         if: always() && github.event_name == 'pull_request' || github.event_name == 'pull_request_target'
         run: echo "value=$(date +'%s')000" >> $GITHUB_OUTPUT
 
-      - uses: cloudposse/github-action-matrix-outputs-read@0.1.1
+        # FIXME: Update version once https://github.com/cloudposse/github-action-matrix-outputs-read/pull/19 got merged
+      - uses: cloudposse/github-action-matrix-outputs-read@f64d60c893eebf6f1da6ca4494124f7d1f011587
         id: read
         if: always() && github.event_name == 'pull_request' || github.event_name == 'pull_request_target'
         with:
