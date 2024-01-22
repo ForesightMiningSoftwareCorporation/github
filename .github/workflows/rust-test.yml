@@ -177,6 +177,7 @@ jobs:
         working-directory: ${{ matrix.path }}
         run: |
           echo "value=$(tomlq package.name -f Cargo.toml)" >> $GITHUB_OUTPUT
+          echo "job=$GITHUB_JOB" >> $GITHUB_OUTPUT
 
       - name: Set start time as env variable
         id: start_time
@@ -380,6 +381,7 @@ jobs:
             publish-dryrun_outcome: ${{ steps.publish-dryrun.outcome }}
             start: ${{ steps.start_time.outputs.value }}
             tests_outcome: ${{ steps.tests.outcome }}
+            job: ${{ steps.name.outputs.job }}
 
   results:
     name: Rust Test Results
@@ -465,6 +467,22 @@ jobs:
               return "1";
             }
 
+            const steps = {
+              "custom_outcome": 13,
+              "fmt_outcome": 14,
+              "check_outcome": 15,
+              "clippy_outcome": 16,
+              "doc_outcome": 17,
+              "deny-license_outcome": 19,
+              "deny-bans_outcome": 20,
+              "deny-advisories_outcome": 21,
+              "deny-sources_outcome": 22,
+              "dependencies_outcome": 23,
+              "tests_outcome": 25,
+              "miri_outcome": 26,
+              "publish-dryrun_outcome": 24,
+            };
+
             let test_output = '';
             const table_footer = '</table>\n';
             let start_time = '';
@@ -478,28 +496,28 @@ jobs:
 
               const workspace_args = ${{ needs.build-matrix.outputs.fallback-matrix }} ? '--workspace' : '';
 
-              const entry = (name, outcome, required, logId) => `
+              const entry = (name, id, job, required) => `
             <tr>
             <td align="center">${ required ? '✓' : '' }</td>
             <td>${ name }</td>
-            <td>${ outcomeEmoji(outcome) }</td>
-            <td><a href="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}">Logs</a></td>
+            <td>${ outcomeEmoji(fetch_string(id, job)) }</td>
+            <td><a href="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}/job/${ fetch_string('job', job) }#step:${ steps[id] }:1">Logs</a></td>
             </tr>
             `;
 
-              const custom = entry('Custom: ${{ inputs.custom_cargo_commands }}', fetch_string('custom_outcome', 'check'), true, 'custom');
-              const fmt = entry('cargo fmt --verbose --all -- --check', fetch_string('fmt_outcome', 'check'), true, 'fmt');
-              const check = entry(`cargo check ${ workspace_args } ${{ inputs.additional_args }}`, fetch_string('check_outcome', 'check'), true, 'check');
-              const clippy = entry(`cargo clippy ${ workspace_args } ${{ inputs.additional_args }} -- -D warnings`, fetch_string('clippy_outcome', 'check'), true, 'clippy');
-              const doc = entry('cargo doc --no-deps ${ workspace_args }', fetch_string('doc_outcome', 'check'), ${{ inputs.test-publish-required == 'true' }}, 'doc');
-              const licenses = entry('cargo deny check licenses', fetch_string('deny-license_outcome', 'check'), false, 'deny-license');
-              const bans = entry('cargo deny check bans', fetch_string('deny-bans_outcome', 'check'), false, 'deny-bans');
-              const advisories = entry('cargo deny check advisories', fetch_string('deny-advisories_outcome', 'check'), false, 'deny-advisories');
-              const sources = entry('cargo deny check sources', fetch_string('deny-sources_outcome', 'check'), false, 'deny-sources');
-              const machete = entry('cargo machete', fetch_string('dependencies_outcome', 'check'), false, 'dependencies');
-              const test = entry(`cargo test ${ workspace_args } ${{ inputs.additional_args }}`, fetch_string('tests_outcome', 'test'), true, 'tests');
-              const miri = entry(`cargo miri test ${ workspace_args } ${{ inputs.additional_args }}`, fetch_string('miri_outcome', 'miri'), false, 'miri');
-              const publish = entry(`cargo package`, fetch_string('publish-dryrun_outcome', 'check'), ${{ inputs.test-publish-required == 'true' }}, 'publish-dryrun');
+              const custom = entry('Custom: ${{ inputs.custom_cargo_commands }}', 'custom_outcome', 'check', true);
+              const fmt = entry('cargo fmt --verbose --all -- --check', 'fmt_outcome', 'check', true);
+              const check = entry(`cargo check ${ workspace_args } ${{ inputs.additional_args }}`, 'check_outcome', 'check', true);
+              const clippy = entry(`cargo clippy ${ workspace_args } ${{ inputs.additional_args }} -- -D warnings`, 'clippy_outcome', 'check', true);
+              const doc = entry('cargo doc --no-deps ${ workspace_args }', 'doc_outcome', 'check', ${{ inputs.test-publish-required == 'true' }});
+              const licenses = entry('cargo deny check licenses', 'deny-license_outcome', 'check', false);
+              const bans = entry('cargo deny check bans', 'deny-bans_outcome', 'check', false);
+              const advisories = entry('cargo deny check advisories', 'deny-advisories_outcome', 'check', false);
+              const sources = entry('cargo deny check sources', 'deny-sources_outcome', 'check', false);
+              const machete = entry('cargo machete', 'dependencies_outcome', 'check', false);
+              const test = entry(`cargo test ${ workspace_args } ${{ inputs.additional_args }}`, 'tests_outcome', 'test', true);
+              const miri = entry(`cargo miri test ${ workspace_args } ${{ inputs.additional_args }}`, 'miri_outcome', 'miri', false);
+              const publish = entry(`cargo package`, 'publish-dryrun_outcome', 'check', ${{ inputs.test-publish-required == 'true' }});
 
               const path_success = is_success(fetch_string('fmt_outcome', 'check'), fetch_string('check_outcome', 'check'), fetch_string('clippy_outcome', 'check'), fetch_string('tests_outcome', 'test'), (${{ inputs.test-publish-required }} ? fetch_string('publish-dryrun_outcome', 'check') : 'success'), (${{ inputs.test-publish-required }} ? fetch_string('doc_outcome', 'check') : 'success'));
 
