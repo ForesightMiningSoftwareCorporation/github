@@ -2,8 +2,6 @@ name: Build builder for napi crates
 
 on:
   workflow_dispatch:
-  push:
-    branches: napi
 
 jobs:
   build-rust-test-image:
