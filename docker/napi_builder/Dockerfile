@@ -27,6 +27,7 @@ WORKDIR /build
 
 RUN mkdir /ssh
 
+COPY config.toml /config.toml
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 

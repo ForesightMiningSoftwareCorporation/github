@@ -7,7 +7,5 @@ chown -R root:root ~/.ssh
 
 sed 's|/home/runner|/root|g' -i.bak ~/.ssh/config
 chmod -R 600 ~/.ssh
-cat ~/.ssh/config
 
-# This will exec the CMD from your Dockerfile, i.e. "npm start"
-exec "sh -c \"$@\""
+cp /config.toml $CARGO_HOME/config.toml

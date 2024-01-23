@@ -22,6 +22,8 @@ inputs:
     description: "node auth token"
   npm_token:
     description: "npm token"
+  shipyard:
+    description: "shipyard registry url"
   shipyard_token:
     description: "shipyard.rs token"
   working-directory:
@@ -91,14 +93,14 @@ runs:
     - name: Build in docker
       uses: addnab/docker-run-action@v3
       env:
-        CARGO_HTTP_USER_AGENT: "shipyard ${{ inputs.shipyard_token }}"
-        SSH_AUTH_SOCK: /ssh-agent
         CARGO_NET_GIT_FETCH_WITH_CLI: "true"
+        SHIPYARD_REGISTRY: ${{ inputs.shipyard }}
+        SHIPYARD_TOKEN: ${{ inputs.shipyard_token }}
       if: ${{ steps.check-version-exists.outputs.exists == 'false' && !contains(inputs.runner_os, 'windows') }}
       with:
         image: ${{ inputs.docker }}
-        options: --user 0:0 -w /build/${{ inputs.working-directory }} -v ${{ github.workspace }}:/build  -v ${{ env.SSH_AUTH_SOCK }}:/ssh-agent -v ${{ steps.check-version-exists.outputs.home }}/.gitconfig:/root/.gitconfig -v ${{ steps.check-version-exists.outputs.home }}/.ssh:/root/.ssh:ro
-        run: ${{ inputs.docker_build }}
+        options: --user 0:0 -w /build/${{ inputs.working-directory }} -v ${{ github.workspace }}:/build -v ${{ env.SSH_AUTH_SOCK }}:/ssh-agent -e SSH_AUTH_SOCK=/ssh-agent -v ${{ steps.check-version-exists.outputs.home }}/.gitconfig:/root/.gitconfig -v ${{ steps.check-version-exists.outputs.home }}/.ssh:/.ssh
+        run: /entrypoint.sh && cargo login --registry ${{ inputs.shipyard }} ${{ inputs.shipyard_token }} && export CARGO_HTTP_USER_AGENT="shipyard ${{ inputs.shipyard_token }}" && ${{ inputs.docker_build }}
 
     - name: Upload artifact
       if: ${{ steps.check-version-exists.outputs.exists == 'false' && contains(inputs.runner_os, 'windows') }}

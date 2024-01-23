@@ -84,9 +84,10 @@ jobs:
           runner_arch: ${{ matrix.os.arch }}
           runner_extension: ${{ matrix.os.ext }}
           docker: ghcr.io/foresightminingsoftwarecorporation/napi-rs-docker-builder:latest
-          docker_build: ls -ahl ~ && ls -ahl / && ls -ahl /root && ls -ahl ~/.ssh && yarn install && yarn build --target x86_64-unknown-linux-musl --js=false
+          docker_build: yarn install && yarn build --target x86_64-unknown-linux-musl --js=false
           node_auth_token: ${{ secrets.GITHUB_TOKEN }}
           npm_token: ${{ secrets.GH_REGISTRY_PACKAGES }}
+          shipyard: ${{ secrets.CARGO_PRIVATE_REGISTRY_NAME }}
           shipyard_token: ${{ secrets.CARGO_PRIVATE_REGISTRY_TOKEN }}
           working-directory: ${{ inputs.working-directory }}
           bin: ${{ needs.check_release_npm.outputs.name }}
