@@ -112,7 +112,10 @@ jobs:
 
   check:
     name: Rust ${{ matrix.type }} ${{ matrix.path }}
-    runs-on: [self-hosted, "${{ needs.build-matrix.outputs.rust-channel }}", "${{ github.run_id }}__${{ matrix.path }}__${{ matrix.type }}__${{ github.run_attempt }}"]
+#    runs-on: [self-hosted, "${{ needs.build-matrix.outputs.rust-channel }}", "${{ github.run_id }}__${{ matrix.path }}__${{ matrix.type }}__${{ github.run_attempt }}"]
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/foresightminingsoftwarecorporation/rust-test:${{ needs.build-matrix.outputs.rust-channel }}
     needs: build-matrix
     env:
       CARGO_HTTP_USER_AGENT: "shipyard ${{ secrets.CARGO_PRIVATE_REGISTRY_TOKEN }}"
